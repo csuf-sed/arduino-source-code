@@ -12,10 +12,26 @@ void setup() {
   Serial.println("Start!");
 }
 
-void loop() {
-  Serial.print("x: ");
-  Serial.println(String(magnet0.magX(),6));
-  Serial.print("y: ");
-  Serial.println(String(magnet0.magY(),6));
+void loop(){
+
+  float heading = atan2(magnet0.magX(), magnet0.magY());
+
+  if (heading < 0){
+    heading += 2 * PI;
+  }
+
+  if ( heading > 2 * PI){
+    heading -= 2 * PI;
+  }
+
+  //convert heading Degrees
+  float headingDeg =  heading * 180/M_PI;
+
+  Serial.print(" Heading = ");
+  Serial.print(heading);
+  Serial.print(" Degress = ");
+  Serial.print(headingDeg);
+  Serial.println();
+
   delay(1000);
 }
