@@ -14,13 +14,18 @@ public:
   Magnetometer(): IMU(Wire, 0x68) {}
 
   void begin() {
+    IMU.begin();
     IMU.setMagCalX(hxb,hxs);  
     IMU.setMagCalY(hyb,hys);
-    IMU.setMagCalZ(hzb,hzs);
+    //IMU.setMagCalZ(hzb,hzs);
   }
 
-  float magX() { return IMU.getMagX_uT(); }
-  float magY() { return IMU.getMagY_uT(); }
+  float magX() { 
+    IMU.readSensor();
+    return IMU.getMagX_uT(); }
+  float magY() { 
+    IMU.readSensor();
+    return IMU.getMagY_uT(); }
   
 public:
   MPU9250 IMU;
