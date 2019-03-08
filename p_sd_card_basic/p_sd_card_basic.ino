@@ -1,39 +1,41 @@
 #include <SD.h>
 
 
-const int chipSelect = 4;
+const int sd_cs = 4;
+const String file_name = "data.txt";
 File file;
 
 void setup() {
- Serial.begin(9600);
- while (!Serial) {}
- Serial.print("Initializing SD card...");
-  // make sure that the default chip select pin is set to
-  // output, even if you don't use it:
-  pinMode(chipSelect, OUTPUT);
-  digitalWrite(chipSelect,HIGH);
- 
- // see if the card is present and can be initialized:
- if (!SD.begin(chipSelect)) {
-   Serial.println("Card failed, or not present");
-   return;
- }
- Serial.println("card initialized.");
- 
-  file = SD.open("data.txt",FILE_WRITE);
-  if (file) {
-    file.write("Data and stuff...");
-    file.write("Style and crap...");
-    file.close();
-    Serial.println("Done");
+  // Setup Serial
+  Serial.begin(9600);
+  while (!Serial) {}
+  Serial.print("Initializing SD card...");
+  
+  // Setup the SD card reader
+  pinMode(sd_cs, OUTPUT);
+  digitalWrite(sd_cs,HIGH);
+  int status = SD.begin(sd_cs);
+  if (status < 0) {
+    Serial.print("SD.begin() failed, status: ");
+    Serial.println(status);
+    while(1) {}
   }
-  else {
-    Serial.println("magnetometer.txt file broke or something");
-    file.println("You broken?");
-    file.close();
+  Serial.println("SD card initialized.");
+  
+  // Write into file
+  Serial.print("Writing into ");
+  Serial.print(file_name);
+  Serial.println("...");
+  file = SD.open(file_name,FILE_WRITE);
+  if (!file) {
+    Serial.println("Failed to open file");
+    while(1) {}
   }
- 
+  file.println("Data and stuff...");
+  file.println("Style and crap...");
+  file.println("Does this work as well?");
+  file.close();
+  Serial.println("Done");
 }
 
-void loop() {
-}
+void loop() {}
