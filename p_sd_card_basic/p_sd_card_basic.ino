@@ -32,7 +32,7 @@ void setup() {
     while(1) {}
   }
   file.println("Data and stuff...");
-  file.println("Style and crap...");
+  file.println("Style and stuff");
   file.println("Does this work as well?");
   file.close();
   Serial.println("Done");
