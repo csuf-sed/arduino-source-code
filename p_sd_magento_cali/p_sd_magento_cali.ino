@@ -5,17 +5,17 @@
 File file;
 const int sd_cs = 4;
 const String file_name = "data.txt";
-//MPU9250 IMU(Wire,0x68);
+MPU9250 IMU(Wire,0x68);
 float hbx = 0, hsx = 0, hby = 0, hsy = 0;
 int status;
 const int buzz = 2;
 
 void mag() {
-  MPU9250 IMU(Wire,0x68);
+  //MPU9250 IMU(Wire,0x68);
     // Setup Magnetometer
   //Serial.println("Initializing Magnetometer...");
   status = IMU.begin();
-  if (status <= 0) {
+  if (status < 0) {
     Serial.print("IMU.begin() failed: status = ");
     Serial.println(status);
     while (true) {}
@@ -30,8 +30,11 @@ void mag() {
     Serial.println(status);
     while (true) {}
   }
+  
   Serial.println("Calibration succesful.");
   delay(500);
+  IMU.readSensor();
+  
   hbx = IMU.getMagBiasX_uT();
   hsx = IMU.getMagScaleFactorX();
   hby = IMU.getMagBiasY_uT();
