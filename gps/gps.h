@@ -6,39 +6,28 @@
 struct Coord {
   float lat;
   float lng;
-  float mps;
 };
 
-const int RXPin = 3, TXPin = 4;
-class gps_location {
+class GPS_Module {
 public:
+  enum { RXPin = 4, TXPin = 3 };
 public:
-  gps_location(): ss(RXPin,TXPin) {}
+  GPS_Module(): ss(RXPin,TXPin) {}
   void begin(){ ss.begin(9600); }
-
 
   void read(){
     while (ss.available() > 0){
-    gps.encode(ss.read());
+      gps.encode(ss.read());
       if (gps.location.isUpdated()){
         coord.lat = gps.location.lat();
         coord.lng = gps.location.lng();
-        coord.mps = gps.speed.mps();
       }
     }
   }
-
-  float get_lng(){
-    return coord.lat;
-  }
-
-  float get_lat(){
-    return coord.lng;
-  }
-
-  float get_mps() {
-    return coord.mps;
-  }
+  const Coord& coord() const { return coord; }
+  float lng() const { return coord.lat; }
+  float lat() const { return coord.lng; }
+  float mps() const { return gps.location.mps(); }
 
 public:
  SoftwareSerial ss;
