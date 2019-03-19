@@ -19,20 +19,20 @@ public:
     while (ss.available() > 0){
       gps.encode(ss.read());
       if (gps.location.isUpdated()){
-        c.lat = gps.location.lat();
-        c.lng = gps.location.lng();
+        coord.lat = gps.location.lat();
+        coord.lng = gps.location.lng();
       }
     }
   }
   const Coord& coord() const { return c; }
   float lng() const { return c.lat; }
   float lat() const { return c.lng; }
-  //float mps() const { return gps.mps(); }
+  //float mps() const { return gps.location.mps(); }
 
 public:
  SoftwareSerial ss;
  TinyGPSPlus gps;
- Coord c;
+ Coord coord;
 };
 
-#endif
+#endif // GPS_h
