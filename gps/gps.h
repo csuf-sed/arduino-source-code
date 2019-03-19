@@ -1,5 +1,5 @@
-#ifndef GPS
-#define GPS
+#ifndef GPS_h
+#define GPS_h
 #include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 
@@ -19,20 +19,20 @@ public:
     while (ss.available() > 0){
       gps.encode(ss.read());
       if (gps.location.isUpdated()){
-        coord.lat = gps.location.lat();
-        coord.lng = gps.location.lng();
+        c.lat = gps.location.lat();
+        c.lng = gps.location.lng();
       }
     }
   }
-  const Coord& coord() const { return coord; }
-  float lng() const { return coord.lat; }
-  float lat() const { return coord.lng; }
-  float mps() const { return gps.location.mps(); }
+  const Coord& coord() const { return c; }
+  float lng() const { return c.lat; }
+  float lat() const { return c.lng; }
+  //float mps() const { return gps.mps(); }
 
 public:
  SoftwareSerial ss;
  TinyGPSPlus gps;
- Coord coord;
+ Coord c;
 };
 
 #endif
