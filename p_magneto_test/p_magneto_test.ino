@@ -25,12 +25,12 @@ void loop(){
   }
 
   //convert heading Degrees
-  float headingDeg =  heading * 180/M_PI;
+  float compassHeading =  heading * 180/M_PI;
 
-  Serial.print(" Heading = ");
+  Serial.print(" Compasss Heading = ");
   Serial.print(heading);
   Serial.print(" Degress = ");
-  Serial.print(headingDeg);
+  Serial.print(compassHeading);
   Serial.println();
 
   delay(1000);
