@@ -1,9 +1,9 @@
 #include "MPU9250.h"
 
-const float hxb = 22.72279345f;
-const float hxs = 0.7950104991f;
-const float hyb = 12.57442714f;
-const float hys = 0.8012245577f;
+const float hxb = -8.874619289f;
+const float hxs = 0.89632523f;
+const float hyb = 19.04453754f;
+const float hys = 0.88371754f;
 
 class Magnetometer {
 public:
