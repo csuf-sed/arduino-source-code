@@ -1,7 +1,9 @@
 #ifndef GPS_h
 #define GPS_h
-#include <SoftwareSerial.h>
+#include "Arduino.h"
 #include <TinyGPS++.h>
+
+#define GPS_SERIAL Serial3
 
 struct Coord {
   float lat;
@@ -10,29 +12,20 @@ struct Coord {
 
 class GPS_Module {
 public:
-  enum { RXPin = 4, TXPin = 3 };
-public:
-  GPS_Module(): ss(RXPin,TXPin) {}
-  void begin(){ ss.begin(9600); }
+  GPS_Module() = default;
+  void begin(unsigned int bitrate = 9600){ GPS_SERIAL.begin(bitrate); }
 
-  void read(){
-    while (ss.available() > 0){
-      gps.encode(ss.read());
-      if (gps.location.isUpdated()){
-        coord.lat = gps.location.lat();
-        coord.lng = gps.location.lng();
-      }
-    }
-  }
+  bool read();
   const Coord& coord() const { return c; }
   float lng() const { return c.lat; }
   float lat() const { return c.lng; }
   //float mps() const { return gps.location.mps(); }
 
 public:
- SoftwareSerial ss;
  TinyGPSPlus gps;
- Coord coord;
+ Coord c;
 };
+
+extern GPS_Module gps;
 
 #endif // GPS_h

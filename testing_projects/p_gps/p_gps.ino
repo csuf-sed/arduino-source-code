@@ -1,14 +1,18 @@
-#include "GPS.h"
+#include "gps.h"
 
-GPS_Module g;
+int buzz = 2;
 
 void setup() {
   Serial.begin(9600);
-  g.begin();
+  gps.begin();
+  pinMode(buzz,OUTPUT);
+  digitalWrite(buzz,LOW);
 }
 
 void loop() {
-  g.read();
-  Serial.println(g.lat(),6);
+  if (gps.read()) {
+    digitalWrite(buzz,HIGH);
+  }
+  Serial.println(gps.lat());
   delay(500);
 }
