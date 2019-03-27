@@ -3,7 +3,7 @@
 
 class US_Sensor {
   public:
-    US_Sensor(): echo(12), trig(13) {}
+    US_Sensor(): echo(13), trig(12) {}
 
     void begin() {
       pinMode(echo, INPUT);
