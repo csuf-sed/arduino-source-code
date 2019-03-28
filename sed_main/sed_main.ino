@@ -10,6 +10,7 @@ const int led_red = 22;   // LEDs
 const int led_green = 23;
 const int led_blue = 24;
 const int buzzer = 25;
+GPS_Data data;
 
 
 //=== setup ===
@@ -23,6 +24,7 @@ void setup() {
   
   motor_driver.begin();
   magnetometer.begin();
+  data.begin();
 
   bluetooth.begin(9600);
   while(!bluetooth) {}
@@ -63,13 +65,14 @@ void loop() {
 
 //=== ctrl_loop ===
 bool ctrl_loop() {
-  if (gps.read() == true) {
+  data.getGPS();
+  if (gps.location.isUpdated()) {
     digitalWrite(buzzer,HIGH);
-    bluetooth.print(gps.lat(),6);
+    bluetooth.print(data.get_lat(),6);
     bluetooth.print(',');
-    bluetooth.print(gps.lng(),6);
+    bluetooth.print(data.get_lng(),6);
     bluetooth.print('|');
-    delay(500);
+    delay(200);
     digitalWrite(buzzer,LOW);
   }
   
@@ -147,14 +150,19 @@ bool ctrl_loop() {
 //=== gps_loop ===
 bool gps_loop() {
     digitalWrite(led_green,HIGH);
-    delay(500);
-    digitalWrite(led_green,LOW);
-    delay(500);
-    gps.read();
-    bluetooth.print(gps.lat(),6);
-    bluetooth.print(',');
-    bluetooth.print(gps.lng(),6);
-    bluetooth.print('|');
+//    delay(100);
+//    digitalWrite(led_green,LOW);
+//    delay(100);
+    data.getGPS();
+    if (gps.location.isUpdated()) {
+      digitalWrite(buzzer,HIGH);
+      bluetooth.print(data.get_lat(),6);
+      bluetooth.print(',');
+      bluetooth.print(data.get_lng(),6);
+      bluetooth.print('|');
+      delay(200);
+      digitalWrite(buzzer,LOW);
+    }
     
 
     if (bluetooth.available() > 0) {

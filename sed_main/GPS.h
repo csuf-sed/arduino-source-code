@@ -1,31 +1,27 @@
-#ifndef GPS_h
-#define GPS_h
-#include "Arduino.h"
+#ifndef GlobalPositioningSystem
+#define GlobalPositioningSystem
+//#include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 
-#define GPS_SERIAL Serial3
+#define ss Serial3
 
-struct Coord {
-  float lat;
-  float lng;
+const int RXPin = 4, TXPin = 3;
+const uint32_t GPSBaud = 9600;
+TinyGPSPlus gps;
+
+class GPS_Data{
+public:
+  //SoftwareSerial ss;4
+  //GPS_Data(): ss(RXPin, TXPin) {}
+  void begin(){ ss.begin(GPSBaud);}
+  void getGPS(){
+    while (ss.available() > 0){
+      gps.encode(ss.read());
+    }
+  }
+  float get_lat(){ return gps.location.lat(); }
+  float get_lng(){ return gps.location.lng(); }
+  int   get_sat() { return gps.satellites.value(); }
 };
 
-class GPS_Module {
-public:
-  GPS_Module() = default;
-  void begin(unsigned int bitrate = 9600){ GPS_SERIAL.begin(bitrate); }
-
-  bool read();
-  const Coord& coord() const { return c; }
-  float lng() const { return c.lat; }
-  float lat() const { return c.lng; }
-  //float mps() const { return gps.location.mps(); }
-
-public:
- TinyGPSPlus gps;
- Coord c;
-};
-
-extern GPS_Module gps;
-
-#endif // GPS_h
+#endif
