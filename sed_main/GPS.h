@@ -19,13 +19,11 @@ public:
   const Coord& coord() const { return c; }
   float lng() const { return c.lat; }
   float lat() const { return c.lng; }
-  int sat() const { return sat_; }
   //float mps() const { return gps.location.mps(); }
 
 public:
  TinyGPSPlus gps;
  Coord c;
- int sat_;
 };
 
 extern GPS_Module gps;

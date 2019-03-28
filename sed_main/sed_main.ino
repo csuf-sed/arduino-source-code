@@ -1,9 +1,9 @@
 #include "Motor_Driver.h"
 #include "Magnetometer.h"
+#include "GPS.h"
 
 //=== variables ===
 #define bluetooth Serial1      // defines the serial for the bluetooth
-Motor_Driver motor0;      // Motor Drivers
 char DaveChar = ' ';      // bluetooth received data
 int StopGo = 0;           // moving flag stop == 0, fast == 1, slow == 2
 const int led_red = 22;   // LEDs
@@ -21,7 +21,7 @@ void setup() {
   pinMode(buzzer,OUTPUT);
   digitalWrite(led_blue,HIGH);
   
-  motor0.begin();
+  motor_driver.begin();
   magnetometer.begin();
 
   bluetooth.begin(9600);
@@ -63,53 +63,62 @@ void loop() {
 
 //=== ctrl_loop ===
 bool ctrl_loop() {
+  if (gps.read() == true) {
+    digitalWrite(buzzer,HIGH);
+    bluetooth.print(gps.lat(),6);
+    bluetooth.print(',');
+    bluetooth.print(gps.lng(),6);
+    bluetooth.print('|');
+    delay(500);
+    digitalWrite(buzzer,LOW);
+  }
+  
   if (bluetooth.available() > 0) {
     DaveChar = bluetooth.read();
-    
-   if (DaveChar == 69){ // E
+    if (DaveChar == 69){ // E
       digitalWrite(led_green,LOW);
       digitalWrite(led_blue,HIGH);
-      motor0.goEast();
+      motor_driver.goEast();
       StopGo = 1;
     }
     else if (DaveChar == 78){ // N
       digitalWrite(led_green,LOW);
       digitalWrite(led_blue,HIGH);
-      motor0.goNorth();
+      motor_driver.goNorth();
       StopGo = 1;
     }
     else if (DaveChar == 83){ // S
       digitalWrite(led_green,LOW);
       digitalWrite(led_blue,HIGH);
-      motor0.goSouth();
+      motor_driver.goSouth();
       StopGo = 1;
     }
     else if (DaveChar == 87){ // W
       digitalWrite(led_green,LOW);
       digitalWrite(led_blue,HIGH);
-      motor0.goWest();
+      motor_driver.goWest();
       StopGo = 1;
     }
     else if (DaveChar == 101) { // e
-      motor0.goEast();
+      motor_driver.goEast();
       StopGo = 2;
     }
     else if (DaveChar == 110) { // n
-      motor0.goNorth();
+      motor_driver.goNorth();
       StopGo = 2;
     }
     else if (DaveChar == 115) { // s
-      motor0.goSouth();
+      motor_driver.goSouth();
       StopGo = 2;
     }
     else if (DaveChar == 119) { // w
-      motor0.goWest();
+      motor_driver.goWest();
       StopGo = 2;
     }
     else if (DaveChar == 42){ // *
       digitalWrite(led_blue,LOW);
       digitalWrite(led_green,HIGH);
-      motor0.stop();
+      motor_driver.stop();
       StopGo = 0;
     }
     else if (DaveChar == 122) { // z used to get out
@@ -122,13 +131,13 @@ bool ctrl_loop() {
 
   switch (StopGo){
   case 0:
-    //motor0.stop();
+    //motor_driver.stop();
     break;
   case 1:
-    motor0.fast();
+    motor_driver.fast();
     break;
   case 2:
-    motor0.slow();
+    motor_driver.slow();
     break;
   }
   
@@ -141,9 +150,10 @@ bool gps_loop() {
     delay(500);
     digitalWrite(led_green,LOW);
     delay(500);
-    bluetooth.print(12.345678);
+    gps.read();
+    bluetooth.print(gps.lat(),6);
     bluetooth.print(',');
-    bluetooth.print(-123.456789);
+    bluetooth.print(gps.lng(),6);
     bluetooth.print('|');
     
 

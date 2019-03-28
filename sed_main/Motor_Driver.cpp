@@ -1,5 +1,7 @@
 #include "Motor_Driver.h"
 
+Motor_Driver motor_driver;
+
 void Motor_Driver::begin() {
   pinMode(ena,OUTPUT);
   pinMode(enb,OUTPUT);

@@ -11,7 +11,6 @@ public:
   Motor_Driver(): ena(9), enb(6), in1(10), in2(11), in3(7), in4(8) {}
 
   void begin();
-
   void slow();
   void fast();
   void stop();
@@ -29,5 +28,7 @@ public:
   int in3;
   int in4; 
 };
+
+extern Motor_Driver motor_driver;
 
 #endif //MOTOR_DRIVER_H

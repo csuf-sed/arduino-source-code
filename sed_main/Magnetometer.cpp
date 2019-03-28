@@ -1,5 +1,7 @@
 #include "Magnetometer.h"
 
+Magnetometer magnetometer;
+
 void Magnetometer::begin() {
   IMU.begin();
   IMU.setMagCalX(hxb,hxs);  
@@ -19,5 +21,3 @@ float Magnetometer::getRadians() {
   if (heading > 2 * PI) heading -= 2 * PI;
   return heading;
 }
-
-Magnetometer magnetometer;

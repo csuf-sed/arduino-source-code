@@ -8,7 +8,6 @@ bool GPS_Module::read(){
     if (gps.location.isUpdated()){
       c.lat = gps.location.lat();
       c.lng = gps.location.lng();
-      sat_ = gps.satellites.value();
       return true;
     }
   }
