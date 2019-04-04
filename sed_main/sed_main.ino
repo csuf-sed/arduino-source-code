@@ -15,6 +15,7 @@ GPS_Data data;
 
 //=== setup ===
 void setup() {
+  Serial.begin(9600);
   // LEDs setup
   pinMode(led_red,OUTPUT);
   pinMode(led_green,OUTPUT);
@@ -156,14 +157,27 @@ bool gps_loop() {
     data.getGPS();
     if (gps.location.isUpdated()) {
       digitalWrite(buzzer,HIGH);
+      delay(200);
+      digitalWrite(buzzer,LOW);
       bluetooth.print(data.get_lat(),6);
       bluetooth.print(',');
       bluetooth.print(data.get_lng(),6);
       bluetooth.print('|');
-      delay(200);
-      digitalWrite(buzzer,LOW);
+      bluetooth.print(data.get_sat());
+      bluetooth.print('q');
+      magnetometer.readSensor();
+      bluetooth.print(magnetometer.getDegrees(),2);
+      bluetooth.print('w');
     }
     
+//    Serial.print(data.get_lat(),6);
+//    Serial.print(',');
+//    Serial.print(data.get_lng(),6);
+//    Serial.print('|');
+//    Serial.print(data.get_sat());
+//    Serial.print('q');
+//    Serial.print(magnetometer.getDegrees(),2);
+//    Serial.print('w');    
 
     if (bluetooth.available() > 0) {
       DaveChar = bluetooth.read();
