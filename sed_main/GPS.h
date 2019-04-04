@@ -5,6 +5,8 @@
 
 #define ss Serial3
 
+struct Coord {float lat, lng;};
+
 const int RXPin = 4, TXPin = 3;
 const uint32_t GPSBaud = 9600;
 TinyGPSPlus gps;

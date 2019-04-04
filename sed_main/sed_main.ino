@@ -148,12 +148,25 @@ bool ctrl_loop() {
   return true;
 }
 
+const float dest_lat = 33.882110;
+const float dest_lng = -117.883544;
+
+void sendBluetooth(float t) {
+  bluetooth.print(data.get_lat(),6);
+  bluetooth.print(',');
+  bluetooth.print(data.get_lng(),6);
+  bluetooth.print('|');
+  bluetooth.print(t,2);
+  bluetooth.print('q');
+  magnetometer.readSensor();
+  bluetooth.print(magnetometer.getDegrees(),2);
+  bluetooth.print('w');
+}
+
 //=== gps_loop ===
 bool gps_loop() {
     digitalWrite(led_green,HIGH);
-//    delay(100);
-//    digitalWrite(led_green,LOW);
-//    delay(100);
+    
     data.getGPS();
     if (gps.location.isUpdated()) {
       digitalWrite(buzzer,HIGH);
@@ -169,27 +182,96 @@ bool gps_loop() {
       bluetooth.print(magnetometer.getDegrees(),2);
       bluetooth.print('w');
     }
-    
-//    Serial.print(data.get_lat(),6);
-//    Serial.print(',');
-//    Serial.print(data.get_lng(),6);
-//    Serial.print('|');
-//    Serial.print(data.get_sat());
-//    Serial.print('q');
-//    Serial.print(magnetometer.getDegrees(),2);
-//    Serial.print('w');    
-
     if (bluetooth.available() > 0) {
       DaveChar = bluetooth.read();
 
       switch(DaveChar) {
         case 101:   // e: engineering
-          digitalWrite(buzzer,HIGH);
           digitalWrite(led_green,LOW);
           digitalWrite(led_blue,HIGH);
+          // Determine current location
+          float _lat = 0;
+          float _lng = 0;
+          int i = 0;
+          while (i < 5) {
+            data.getGPS();
+            if (gps.location.isUpdated()) {
+              digitalWrite(buzzer,HIGH);
+              delay(50);
+              digitalWrite(buzzer,LOW);
+              _lat += data.get_lat();
+              _lng += data.get_lng();
+              ++i;
+            }
+          }
+          _lat /= 5;
+          _lng /= 5;
+          //Determine orientation
+          float _orientation = 0;
+          for(int i = 0; i < 5; ++i) {
+            magnetometer.readSensor();
+            _orientation += magnetometer.getDegrees();
+            delay(50);
+          }
+          _orientation /= 5;
+
+          float _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
+          float courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
+
+          while (abs(_orientation - courseTo) > 15) {
+            motor_driver.goEast();
+            motor_driver.slow();
+            magnetometer.readSensor();
+            _orientation = magnetometer.getDegrees();
+          }
+          motor_driver.stop();
+          // GO ----------
+          while (_dist > 3.0f) {
+            motor_driver.goNorth();
+            motor_driver.slow();
+            int i = 0;
+            _lat = 0;
+            _lng = 0;
+            while (i < 2) {
+              data.getGPS();
+              if (gps.location.isUpdated()) {
+                digitalWrite(buzzer,HIGH);
+                delay(40);
+                digitalWrite(buzzer,LOW);
+                _lat += data.get_lat();
+                _lng += data.get_lng();
+                ++i;
+              }
+            }
+            _lat /= 2;
+            _lng /= 2;
+            courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
+            magnetometer.readSensor();
+            _orientation = magnetometer.getDegrees();
+            sendBluetooth(courseTo);
+            while (_orientation - courseTo > 15) {
+              motor_driver.goWest();
+              delay(50);
+              magnetometer.readSensor();
+              _orientation = magnetometer.getDegrees();
+              sendBluetooth(courseTo);
+            }
+            while (courseTo - _orientation > 15) {
+              motor_driver.goEast();
+              delay(50);
+              magnetometer.readSensor();
+              _orientation = magnetometer.getDegrees();
+              sendBluetooth(courseTo);
+            }
+            _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
+          }
+          motor_driver.stop();
+          
+          digitalWrite(buzzer,HIGH);
           delay(500);
           digitalWrite(buzzer,LOW);
           digitalWrite(led_blue,LOW);
+          break;
           // Go to engineering
         case 104:   // h: health
           digitalWrite(buzzer,HIGH);
@@ -198,6 +280,7 @@ bool gps_loop() {
           delay(500);
           digitalWrite(buzzer,LOW);
           digitalWrite(led_blue,LOW);
+          break;
         case 108:   // l: library
           digitalWrite(buzzer,HIGH);
           digitalWrite(led_green,LOW);
@@ -205,8 +288,10 @@ bool gps_loop() {
           delay(500);
           digitalWrite(buzzer,LOW);
           digitalWrite(led_blue,LOW);
+          break;
         case 122:   // z: exit
           return false;
+          break;
         default:    // invalid input
           digitalWrite(buzzer,HIGH);
           digitalWrite(led_green,LOW);
@@ -218,3 +303,5 @@ bool gps_loop() {
     }
     return true;
 }
+
+//--------- To Move ---------------
