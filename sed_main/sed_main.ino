@@ -151,7 +151,7 @@ bool ctrl_loop() {
 const float dest_lat = 33.882110;
 const float dest_lng = -117.883544;
 
-void sendBluetooth(float t) {
+void sendBluetooth(float t,float _dist = 0.0f) {
   bluetooth.print(data.get_lat(),6);
   bluetooth.print(',');
   bluetooth.print(data.get_lng(),6);
@@ -161,6 +161,8 @@ void sendBluetooth(float t) {
   magnetometer.readSensor();
   bluetooth.print(magnetometer.getDegrees(),2);
   bluetooth.print('w');
+  bluetooth.print(_dist,6);
+  bluetooth.print('n');
 }
 
 //=== gps_loop ===
@@ -181,96 +183,15 @@ bool gps_loop() {
       magnetometer.readSensor();
       bluetooth.print(magnetometer.getDegrees(),2);
       bluetooth.print('w');
+      bluetooth.print(0.0f,6);
+      bluetooth.print('n');
     }
     if (bluetooth.available() > 0) {
       DaveChar = bluetooth.read();
 
       switch(DaveChar) {
         case 101:   // e: engineering
-          digitalWrite(led_green,LOW);
-          digitalWrite(led_blue,HIGH);
-          // Determine current location
-          float _lat = 0;
-          float _lng = 0;
-          int i = 0;
-          while (i < 5) {
-            data.getGPS();
-            if (gps.location.isUpdated()) {
-              digitalWrite(buzzer,HIGH);
-              delay(50);
-              digitalWrite(buzzer,LOW);
-              _lat += data.get_lat();
-              _lng += data.get_lng();
-              ++i;
-            }
-          }
-          _lat /= 5;
-          _lng /= 5;
-          //Determine orientation
-          float _orientation = 0;
-          for(int i = 0; i < 5; ++i) {
-            magnetometer.readSensor();
-            _orientation += magnetometer.getDegrees();
-            delay(50);
-          }
-          _orientation /= 5;
-
-          float _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
-          float courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
-
-          while (abs(_orientation - courseTo) > 15) {
-            motor_driver.goEast();
-            motor_driver.slow();
-            magnetometer.readSensor();
-            _orientation = magnetometer.getDegrees();
-          }
-          motor_driver.stop();
-          // GO ----------
-          while (_dist > 3.0f) {
-            motor_driver.goNorth();
-            motor_driver.slow();
-            int i = 0;
-            _lat = 0;
-            _lng = 0;
-            while (i < 2) {
-              data.getGPS();
-              if (gps.location.isUpdated()) {
-                digitalWrite(buzzer,HIGH);
-                delay(40);
-                digitalWrite(buzzer,LOW);
-                _lat += data.get_lat();
-                _lng += data.get_lng();
-                ++i;
-              }
-            }
-            _lat /= 2;
-            _lng /= 2;
-            courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
-            magnetometer.readSensor();
-            _orientation = magnetometer.getDegrees();
-            sendBluetooth(courseTo);
-            while (_orientation - courseTo > 15) {
-              motor_driver.goWest();
-              delay(50);
-              magnetometer.readSensor();
-              _orientation = magnetometer.getDegrees();
-              sendBluetooth(courseTo);
-            }
-            while (courseTo - _orientation > 15) {
-              motor_driver.goEast();
-              delay(50);
-              magnetometer.readSensor();
-              _orientation = magnetometer.getDegrees();
-              sendBluetooth(courseTo);
-            }
-            _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
-          }
-          motor_driver.stop();
-          
-          digitalWrite(buzzer,HIGH);
-          delay(500);
-          digitalWrite(buzzer,LOW);
-          digitalWrite(led_blue,LOW);
+          move_to();
           break;
           // Go to engineering
         case 104:   // h: health
@@ -305,3 +226,88 @@ bool gps_loop() {
 }
 
 //--------- To Move ---------------
+void move_to() {
+  digitalWrite(led_green,LOW);
+  digitalWrite(led_blue,HIGH);
+  // Determine current location
+  float _lat = 0;
+  float _lng = 0;
+  int i = 0;
+  while (i < 5) {
+    data.getGPS();
+    if (gps.location.isUpdated()) {
+      digitalWrite(buzzer,HIGH);
+      delay(50);
+      digitalWrite(buzzer,LOW);
+      _lat += data.get_lat();
+      _lng += data.get_lng();
+      ++i;
+    }
+  }
+  _lat /= 5;
+  _lng /= 5;
+  //Determine orientation
+  float _orientation = 0;
+  for(int i = 0; i < 5; ++i) {
+    magnetometer.readSensor();
+    _orientation += magnetometer.getDegrees();
+    delay(50);
+  }
+  _orientation /= 5;
+
+  float _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
+  float courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
+
+  while (abs(_orientation - courseTo) > 15) {
+    motor_driver.goEast();
+    motor_driver.slow();
+    magnetometer.readSensor();
+    _orientation = magnetometer.getDegrees();
+  }
+  motor_driver.stop();
+  // GO ----------
+  while (_dist > 3.0f) {
+    motor_driver.goNorth();
+    motor_driver.slow();
+    int i = 0;
+    _lat = 0;
+    _lng = 0;
+    while (i < 2) {
+      data.getGPS();
+      if (gps.location.isUpdated()) {
+        digitalWrite(buzzer,HIGH);
+        delay(40);
+        digitalWrite(buzzer,LOW);
+        _lat += data.get_lat();
+        _lng += data.get_lng();
+        ++i;
+      }
+    }
+    _lat /= 2;
+    _lng /= 2;
+    courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
+    magnetometer.readSensor();
+    _orientation = magnetometer.getDegrees();
+    sendBluetooth(courseTo,_dist);
+    while (_orientation - courseTo > 15) {
+      motor_driver.goWest();
+      delay(50);
+      magnetometer.readSensor();
+      _orientation = magnetometer.getDegrees();
+      sendBluetooth(courseTo,_dist);
+    }
+    while (courseTo - _orientation > 15) {
+      motor_driver.goEast();
+      delay(50);
+      magnetometer.readSensor();
+      _orientation = magnetometer.getDegrees();
+      sendBluetooth(courseTo,_dist);
+    }
+    _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
+  }
+  motor_driver.stop();
+  digitalWrite(buzzer,HIGH);
+  delay(500);
+  digitalWrite(buzzer,LOW);
+  digitalWrite(led_blue,LOW);
+}

@@ -1,6 +1,5 @@
-#ifndef GlobalPositioningSystem
-#define GlobalPositioningSystem
-//#include <SoftwareSerial.h>
+#ifndef GPS_H
+#define GPS_H
 #include <TinyGPS++.h>
 
 #define ss Serial3
@@ -9,11 +8,11 @@ struct Coord {float lat, lng;};
 
 const int RXPin = 4, TXPin = 3;
 const uint32_t GPSBaud = 9600;
-TinyGPSPlus gps;
+extern TinyGPSPlus gps;
 
 class GPS_Data{
 public:
-  //SoftwareSerial ss;4
+  //SoftwareSerial ss;
   //GPS_Data(): ss(RXPin, TXPin) {}
   void begin(){ ss.begin(GPSBaud);}
   void getGPS(){
@@ -26,4 +25,5 @@ public:
   int   get_sat() { return gps.satellites.value(); }
 };
 
-#endif
+
+#endif // GPS_H
