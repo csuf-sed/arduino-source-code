@@ -152,18 +152,40 @@ bool ctrl_loop() {
 const float dest_lat = 33.882110;
 const float dest_lng = -117.883544;
 
-void sendBluetooth(float t,float _dist = 0.0f) {
+enum DIRECTION { STOP = 0, LEFT = 1, RIGHT = 2, FORWARD = 3 };
+
+void sendBluetooth(float _sat,float _dist = 0.0f, float _course = 0.0f, int _dir = 0) {
   bluetooth.print(data.get_lat(),6);
   bluetooth.print(',');
   bluetooth.print(data.get_lng(),6);
   bluetooth.print('|');
-  bluetooth.print(t,2);
+  bluetooth.print(_sat);
   bluetooth.print('q');
   magnetometer.readSensor();
   bluetooth.print(magnetometer.getDegrees(),2);
   bluetooth.print('w');
   bluetooth.print(_dist,6);
   bluetooth.print('n');
+  bluetooth.print(_course,6);
+  bluetooth.print('t');
+  switch(_dir) {
+    case STOP:
+      bluetooth.print("STOP");
+      break;
+    case LEFT:
+      bluetooth.print("LEFT");
+      break;
+    case RIGHT:
+      bluetooth.print("RIGHT");
+      break;
+    case FORWARD:
+      bluetooth.print("FORWARD");
+      break;
+    default:
+      bluetooth.print("-");
+      break;
+  }
+  bluetooth.print('y');
 }
 
 //=== gps_loop ===
@@ -175,6 +197,7 @@ bool gps_loop() {
       digitalWrite(buzzer,HIGH);
       delay(200);
       digitalWrite(buzzer,LOW);
+
       bluetooth.print(data.get_lat(),6);
       bluetooth.print(',');
       bluetooth.print(data.get_lng(),6);
@@ -184,8 +207,12 @@ bool gps_loop() {
       magnetometer.readSensor();
       bluetooth.print(magnetometer.getDegrees(),2);
       bluetooth.print('w');
-      bluetooth.print(0.0f,6);
+      bluetooth.print(0.0,6);
       bluetooth.print('n');
+      bluetooth.print(0.0,6);
+      bluetooth.print('t');
+      bluetooth.print("STOP");
+      bluetooth.print('y');
     }
     if (bluetooth.available() > 0) {
       DaveChar = bluetooth.read();
@@ -258,18 +285,20 @@ void move_to() {
 
   float _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
   float courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
+  int   _dir = STOP;
 
   while (abs(_orientation - courseTo) > 15) {
     motor_driver.goEast();
-    motor_driver.slow();
+    motor_driver.fast();
     magnetometer.readSensor();
     _orientation = magnetometer.getDegrees();
   }
   motor_driver.stop();
   // GO ----------
   while (_dist > 3.0f) {
+    _dir = FORWARD;
     motor_driver.goNorth();
-    motor_driver.slow();
+    motor_driver.fast();
     int i = 0;
     _lat = 0;
     _lng = 0;
@@ -289,20 +318,22 @@ void move_to() {
     courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
     magnetometer.readSensor();
     _orientation = magnetometer.getDegrees();
-    sendBluetooth(courseTo,_dist);
-    while (_orientation - courseTo > 15) {
+    sendBluetooth(data.get_sat(),_dist,courseTo,_dir);            // BLUETOOTH
+    while (_orientation - courseTo > 10) {
+      _dir = LEFT;
       motor_driver.goWest();
       delay(50);
       magnetometer.readSensor();
       _orientation = magnetometer.getDegrees();
-      sendBluetooth(courseTo,_dist);
+      //sendBluetooth(data.get_sat(),_dist,courseTo,_dir);          // BLUETOOTH
     }
-    while (courseTo - _orientation > 15) {
+    while (courseTo - _orientation > 10) {
+      _dir = RIGHT;
       motor_driver.goEast();
       delay(50);
       magnetometer.readSensor();
       _orientation = magnetometer.getDegrees();
-      sendBluetooth(courseTo,_dist);
+      //sendBluetooth(data.get_sat(),_dist,courseTo,_dir);          // BLUETOOTH
     }
     _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
   }
