@@ -223,7 +223,89 @@ bool gps_loop() {
 
       switch(DaveChar) {
         case 101:   // e: engineering
+<<<<<<< HEAD
+          //turn off green light to know robot moving
+          digitalWrite(led_green,LOW);
+          digitalWrite(led_blue,HIGH);
+
+          
+          // Determine current location
+          float _lat = 0;
+          float _lng = 0;
+          int i = 0;
+          while (i < 5) {
+            data.getGPS();
+            if (gps.location.isUpdated()) {
+              digitalWrite(buzzer,HIGH);
+              delay(50);
+              digitalWrite(buzzer,LOW);
+              _lat += data.get_lat();
+              _lng += data.get_lng();
+              ++i;
+            }
+          }
+          _lat /= 5;
+          _lng /= 5;
+
+          //determine heading deg
+          float _orientation = 0;
+          for (int i = 0; i < 5; ++i){
+            magnetometer.readSensor();
+            _orientation += magnetometer.getDegrees();
+            delay(50);
+          }
+          _orientation /= 5;
+         
+          //calculate dest distance and degrees
+          float _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
+          float courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
+
+          while (abs(courseTo - _orientation) <= 15){
+              motor_driver.goEast(); //turn right
+              motor_driver.fast();
+              magnetometer.readSensor();
+              _orientation = magnetomter.getDegrees();
+          }
+
+          while (_dist > 4.0f){
+                motor_driver.goNorth(); //move forward
+                motor_driver.fast();
+                int i = 0;
+                _lat = 0;
+                _lng = 0;
+    
+                data.getGPS();
+                if (gps.location.isUpdated()){
+                  digitalWrite(buzzer,HIGH);
+                  delay(40);
+                  digitalWrite(buzzer,LOW);
+                }
+                courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
+                magnetometer.readSensor();
+                _orientation = magnetometer.getDegrees();
+                sendBluetooth(courseTo);
+      
+                while (_orientation - courseTo > 15) {
+                  motor_driver.goWest(); //turn left
+                  magnetometer.readSensor();
+                  _orientation = magnetometer.getDegrees();
+                  sendBluetooth(courseTo);
+                }
+                while (courseTo - _orientation > 15) {
+                  motor_driver.goEast(); //turn right
+                  magnetometer.readSensor();
+                  _orientation = magnetometer.getDegrees();
+                  sendBluetooth(courseTo);
+               }
+             _dist = gps.distanceBetween(_lat, _lng, dest_lat, dest_lng);
+            }
+          digitalWrite(buzzer,HIGH);
+          delay(500);
+          digitalWrite(buzzer,LOW);
+          digitalWrite(led_blue,LOW);
+=======
           move_to();
+>>>>>>> 7efd4c5eb025234822942f31b171ee462af7918c
           break;
           // Go to engineering
         case 104:   // h: health
