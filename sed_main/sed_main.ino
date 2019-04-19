@@ -3,20 +3,16 @@
 #include "GPS.h"
 
 //=== variables ===
-#define bluetooth Serial1      // defines the serial for the bluetooth
-char DaveChar = ' ';      // bluetooth received data
-int StopGo = 0;           // moving flag stop == 0, fast == 1, slow == 2
-const int led_red = 22;   // LEDs
+#define bluetooth Serial1   // defines the serial for the bluetooth
+char DaveChar = ' ';        // bluetooth received data
+int StopGo = 0;             // moving flag stop == 0, fast == 1, slow == 2
+const int led_red = 22;     // LEDs
 const int led_green = 23;
 const int led_blue = 24;
 const int buzzer = 25;
-GPS_Data data;
-
-//comment
 
 //=== setup ===
 void setup() {
-  Serial.begin(9600);
   // LEDs setup
   pinMode(led_red,OUTPUT);
   pinMode(led_green,OUTPUT);
@@ -26,7 +22,7 @@ void setup() {
   
   motor_driver.begin();
   magnetometer.begin();
-  data.begin();
+  gps.begin();
 
   bluetooth.begin(9600);
   while(!bluetooth) {}
@@ -38,7 +34,7 @@ void setup() {
 void loop() {
   if (bluetooth.available() > 0) {
     DaveChar = bluetooth.read();
-    if (DaveChar == 42) { // received : *   run : control
+    if (DaveChar == 42) {       // received : *   run : control
       digitalWrite(led_red,LOW);
       digitalWrite(buzzer,HIGH);
       delay(50);
@@ -67,14 +63,14 @@ void loop() {
 
 //=== ctrl_loop ===
 bool ctrl_loop() {
-  data.getGPS();
-  if (gps.location.isUpdated()) {
+  gps.read();
+  if (gps.isUpdated()) {
     digitalWrite(buzzer,HIGH);
-    bluetooth.print(data.get_lat(),6);
+    bluetooth.print(gps.lat(),6);
     bluetooth.print(',');
-    bluetooth.print(data.get_lng(),6);
+    bluetooth.print(gps.lng(),6);
     bluetooth.print('|');
-    delay(200);
+    delay(20);
     digitalWrite(buzzer,LOW);
   }
   
@@ -120,6 +116,16 @@ bool ctrl_loop() {
       motor_driver.goWest();
       StopGo = 2;
     }
+    else if(DaveChar == 49) {   // 1 : Turn Left
+      motor_driver.goWest();
+      motor_driver.fast(LEFT);
+      StopGo = 0;
+    }
+    else if(DaveChar == 50) {   // 2 : Turn Right
+      motor_driver.goEast();
+      motor_driver.fast(RIGHT);
+      StopGo = 0;
+    }
     else if (DaveChar == 42){ // *
       digitalWrite(led_blue,LOW);
       digitalWrite(led_green,HIGH);
@@ -152,12 +158,10 @@ bool ctrl_loop() {
 const float dest_lat = 33.882110;
 const float dest_lng = -117.883544;
 
-enum DIRECTION { STOP = 0, LEFT = 1, RIGHT = 2, FORWARD = 3 };
-
 void sendBluetooth(float _sat,float _dist = 0.0f, float _course = 0.0f, int _dir = 0) {
-  bluetooth.print(data.get_lat(),6);
+  bluetooth.print(gps.lat(),6);
   bluetooth.print(',');
-  bluetooth.print(data.get_lng(),6);
+  bluetooth.print(gps.lng(),6);
   bluetooth.print('|');
   bluetooth.print(_sat);
   bluetooth.print('q');
@@ -192,17 +196,17 @@ void sendBluetooth(float _sat,float _dist = 0.0f, float _course = 0.0f, int _dir
 bool gps_loop() {
     digitalWrite(led_green,HIGH);
     
-    data.getGPS();
-    if (gps.location.isUpdated()) {
+    gps.read();
+    if (gps.isUpdated()) {
       digitalWrite(buzzer,HIGH);
       delay(200);
       digitalWrite(buzzer,LOW);
 
-      bluetooth.print(data.get_lat(),6);
+      bluetooth.print(gps.lat(),6);
       bluetooth.print(',');
-      bluetooth.print(data.get_lng(),6);
+      bluetooth.print(gps.lng(),6);
       bluetooth.print('|');
-      bluetooth.print(data.get_sat());
+      bluetooth.print(gps.sat());
       bluetooth.print('q');
       magnetometer.readSensor();
       bluetooth.print(magnetometer.getDegrees(),2);
@@ -262,13 +266,13 @@ void move_to() {
   float _lng = 0;
   int i = 0;
   while (i < 5) {
-    data.getGPS();
-    if (gps.location.isUpdated()) {
+    gps.read();
+    if (gps.isUpdated()) {
       digitalWrite(buzzer,HIGH);
-      delay(50);
+      delay(20);
       digitalWrite(buzzer,LOW);
-      _lat += data.get_lat();
-      _lng += data.get_lng();
+      _lat += gps.lat();
+      _lng += gps.lng();
       ++i;
     }
   }
@@ -279,7 +283,7 @@ void move_to() {
   for(int i = 0; i < 5; ++i) {
     magnetometer.readSensor();
     _orientation += magnetometer.getDegrees();
-    delay(50);
+    delay(20);
   }
   _orientation /= 5;
 
@@ -299,47 +303,51 @@ void move_to() {
     _dir = FORWARD;
     motor_driver.goNorth();
     motor_driver.fast();
+    magnetometer.readSensor();
+    _orientation = magnetometer.getDegrees();
+    
     int i = 0;
     _lat = 0;
     _lng = 0;
     while (i < 2) {
-      data.getGPS();
-      if (gps.location.isUpdated()) {
+      gps.read();
+      if (gps.isUpdated()) {
         digitalWrite(buzzer,HIGH);
-        delay(40);
+        delay(20);
         digitalWrite(buzzer,LOW);
-        _lat += data.get_lat();
-        _lng += data.get_lng();
+        _lat += gps.lat();
+        _lng += gps.lng();
         ++i;
       }
     }
     _lat /= 2;
     _lng /= 2;
+    _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
     courseTo = gps.courseTo(_lat,_lng,dest_lat,dest_lng);
     magnetometer.readSensor();
-    _orientation = magnetometer.getDegrees();
-    sendBluetooth(data.get_sat(),_dist,courseTo,_dir);            // BLUETOOTH
+    _orientation += magnetometer.getDegrees();
+    _orientation /= 2;
     while (_orientation - courseTo > 10) {
       _dir = LEFT;
       motor_driver.goWest();
-      delay(50);
+      delay(10);
       magnetometer.readSensor();
       _orientation = magnetometer.getDegrees();
-      //sendBluetooth(data.get_sat(),_dist,courseTo,_dir);          // BLUETOOTH
+      //sendBluetooth(gps.sat(),_dist,courseTo,_dir);          // BLUETOOTH
     }
     while (courseTo - _orientation > 10) {
       _dir = RIGHT;
       motor_driver.goEast();
-      delay(50);
+      delay(10);
       magnetometer.readSensor();
       _orientation = magnetometer.getDegrees();
-      //sendBluetooth(data.get_sat(),_dist,courseTo,_dir);          // BLUETOOTH
+      //sendBluetooth(gps.sat(),_dist,courseTo,_dir);          // BLUETOOTH
     }
-    _dist = gps.distanceBetween(_lat,_lng,dest_lat,dest_lng);
+    sendBluetooth(gps.sat(),_dist,courseTo,_dir);              // BLUETOOTH
   }
   motor_driver.stop();
   digitalWrite(buzzer,HIGH);
-  delay(500);
+  delay(700);
   digitalWrite(buzzer,LOW);
   digitalWrite(led_blue,LOW);
 }

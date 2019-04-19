@@ -17,9 +17,19 @@ void Motor_Driver::slow() {
   analogWrite(enb,_slow);
 }
 
-void Motor_Driver::fast() {
-  analogWrite(ena,_fast);
-  analogWrite(enb,_fast);
+void Motor_Driver::fast(int dir) {
+  if (dir == FORWARD) {
+    analogWrite(ena,_fast);
+    analogWrite(enb,_fast);
+  }
+  else if (dir == LEFT) {  // ena
+    analogWrite(ena,0);
+    analogWrite(enb,_fast);
+  }
+  else if (dir == RIGHT) { // enb
+    analogWrite(ena,_fast);
+    analogWrite(enb,0);
+  }
 }
 
 void Motor_Driver::stop() {
@@ -42,10 +52,10 @@ void Motor_Driver::goSouth() {
 }
 
 void Motor_Driver::goEast() {
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
-  digitalWrite(in3, LOW);
-  digitalWrite(in4, HIGH);
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
 }
 
 void Motor_Driver::goWest() {

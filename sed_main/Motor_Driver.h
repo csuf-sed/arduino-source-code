@@ -3,16 +3,19 @@
 
 #include <Arduino.h>
 
+enum DIRECTION { STOP = 0, LEFT = 1, RIGHT = 2, FORWARD = 3 };
+
 class Motor_Driver {
 public:
   static const int _fast = 255;
-  static const int _slow = 180;
+  static const int _slow = 100;
+  const int accel = 5;
 public:
   Motor_Driver(): ena(9), enb(6), in1(10), in2(11), in3(7), in4(8) {}
 
   void begin();
   void slow();
-  void fast();
+  void fast(int dir = FORWARD);
   void stop();
 
   void goNorth();
