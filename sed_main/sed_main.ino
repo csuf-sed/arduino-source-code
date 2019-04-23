@@ -1,6 +1,8 @@
 #include "Motor_Driver.h"
 #include "Magnetometer.h"
 #include "GPS.h"
+#include "Sensor.h"
+
 
 //=== variables ===
 #define bluetooth Serial1   // defines the serial for the bluetooth
@@ -23,12 +25,12 @@ void setup() {
   motor_driver.begin();
   magnetometer.begin();
   gps.begin();
+  sensor.begin();
 
   bluetooth.begin(9600);
   while(!bluetooth) {}
   digitalWrite(led_blue,LOW);
 }
-
 
 //=== loop ===
 void loop() {
@@ -155,6 +157,16 @@ bool ctrl_loop() {
   return true;
 }
 
+void Avoid_Obstacle(){
+  while ( sensor.Danger() ){
+    motor_driver.stop();
+    motor_driver.goSouth();
+    delay(50);
+    motor_driver.goEast();
+  }
+  motor_driver.goNorth();
+}
+
 const float latitude [3] = {33.882621, 33.882674, 33.882677};
 const float longtitude [3] = {-117.883726, -117.884042, -117.884254};
 void move_to(float dest_lat, float dest_lng);
@@ -192,6 +204,8 @@ void sendBluetooth(float _sat,float _dist = 0.0f, float _course = 0.0f, int _dir
   }
   bluetooth.print('y');
 }
+
+
 
 //=== gps_loop ===
 bool gps_loop() {
