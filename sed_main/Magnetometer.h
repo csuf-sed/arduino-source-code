@@ -5,10 +5,10 @@
 
 class Magnetometer {
 public:
-  const float hxb = -8.874619289f;
-  const float hxs = 0.89632523f;
-  const float hyb = 19.04453754f;
-  const float hys = 0.88371754f;
+  const float hxb = -6.67241f;
+  const float hxs = 0.853901f;
+  const float hyb = 13.82588f;
+  const float hys = 0.848811f;
 public:
   Magnetometer(): IMU(Wire, 0x68) {}
   void begin();
@@ -16,8 +16,10 @@ public:
   void readSensor() { IMU.readSensor(); }
   float getDegrees();
   float getRadians();
-  float magX() { return IMU.getMagX_uT(); }
-  float magY() { return IMU.getMagY_uT(); }
+  float magX() const { return IMU.getMagX_uT(); }
+  float magY() const { return IMU.getMagY_uT(); }
+
+  float turning_angle(float courseTo_) const { return static_cast<int>(courseTo_ - getDegrees() + 540)%360 - 180; }
   
 public:
   MPU9250 IMU;
