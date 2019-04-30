@@ -163,8 +163,8 @@ bool ctrl_loop() {
   return true;
 }
 
-const float latitude [3] = {33.882621, 33.882655, 33.882677};
-const float longtitude [3] = {-117.883726, -117.884034, -117.884254};
+const float latitude [3] = {33.882594, 33.882677, 33.882677};
+const float longtitude [3] = {-117.883708, -117.884034, -117.884254};
 void move_to(float dest_lat, float dest_lng);
 
 void sendBluetooth(float _sat,float _dist = 0.0f, float _course = 0.0f, int _dir = 0) {
@@ -390,8 +390,7 @@ void move_to(float dest_lat, float dest_lng) {
       motor_driver.goWest();
       motor_driver.fast();
       magnetometer.readSensor();
-      _orientation = magneto
-      meter.getDegrees();
+      _orientation = magnetometer.getDegrees();
       sendBluetooth(data.get_sat(),_dist,_courseTo,_dir);          // BLUETOOTH
     }
     else {
