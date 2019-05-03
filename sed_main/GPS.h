@@ -1,9 +1,10 @@
 #ifndef GPS_h
 #define GPS_h
 
-#include "Arduino.h"
 #include <TinyGPS++.h>
+
 #define GPS_SERIAL Serial3
+extern TinyGPSPlus tiny_gps;
 
 struct Coord { float lat; float lng; };
 
@@ -16,9 +17,9 @@ public:
   void  read();
   bool  isUpdated();
   const Coord& coord() const {return c_;}
-  float lng() const {return c_.lat;}
-  float lat() const {return c_.lng;}
-  int   sat() const {return gps_.satellites.value();}
+  float lat() const {return c_.lat;}
+  float lng() const {return c_.lng;}
+  int   sat() const {return tiny_gps.satellites.value();}
   
   float distanceBetween(float lat0, float lng0, float lat1, float lng1);
   float distanceBetween(float lat1, float lng1);
@@ -31,7 +32,6 @@ public:
   float courseTo(Coord coord1);
   
 public:
- TinyGPSPlus gps_;
  Coord       c_;
  bool        updated;
 };
